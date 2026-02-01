@@ -20,6 +20,16 @@ import seaborn as sns
 import os.path
 import sys
 import gc
+import re # for regex
+import nltk
+from nltk.corpus import stopwords
+from nltk.stem import SnowballStemmer
+from nltk.tokenize import word_tokenize
+from nltk.stem import WordNetLemmatizer
+nltk.download('wordnet')
+nltk.download('stopwords')
+nltk.download('punkt')
+#nltk.download('all')
 
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
@@ -33,7 +43,6 @@ from sklearn.metrics import f1_score
 from sklearn.metrics import precision_recall_curve
 from sklearn.feature_extraction.text import CountVectorizer
 from imblearn.over_sampling import SMOTE
-
 
 # Reduce DataFrame size
 # This part of the code is not my, I get from this webpage: 
@@ -148,3 +157,53 @@ def plot_roc_curve(fpr, tpr, label=None):
     plt.xlabel('False Positive Rate (Fall-Out)', fontsize=16) 
     plt.ylabel('True Positive Rate (Recall)', fontsize=16)    
     plt.grid(True) 
+
+################### cleaning ################### 
+def clean(text):
+    cleaned = re.compile(r'<.*?>') # remove tags html
+    return re.sub(cleaned,'',text)
+
+# remover caracteres especiais
+def is_special(text):
+    rem = ''
+    for i in text:
+        if i.isalnum():
+            rem = rem + i
+        else:
+            rem = rem + ' '
+    return rem
+
+# Converter - lowercase
+def to_lower(text):
+    return text.lower()
+
+nltk.download('stopwords')
+nltk.download('punkt')
+
+def rem_stopwords(text):
+    stop_words = set(stopwords.words('english'))
+    words = word_tokenize(text)
+    return [w for w in words if w not in stop_words]
+
+#No review tenha palavras de outro idioma
+def stem_txt(text):
+    ss = SnowballStemmer('english')
+    return " ".join([ss.stem(w) for w in text])
+
+#################################################
+
+# create preprocess_text function
+def preprocess_text(text):
+    # Tokenize the text
+    tokens = word_tokenize(text.lower())
+
+    # Remove stop words
+    filtered_tokens = [token for token in tokens if token not in stopwords.words('english')]
+
+    # Lemmatize the tokens
+    lemmatizer = WordNetLemmatizer()
+    lemmatized_tokens = [lemmatizer.lemmatize(token) for token in filtered_tokens]
+
+    # Join the tokens back into a string
+    processed_text = ' '.join(lemmatized_tokens)
+    return processed_text
