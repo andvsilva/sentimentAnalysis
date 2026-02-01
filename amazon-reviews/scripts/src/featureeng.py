@@ -1,182 +1,98 @@
 ###########################################################
-### step  2 - feature engineering
-# 
-# Add description for this code.
+### step 2 - feature engineering (OPTIMIZED)
 ###########################################################
 
-# libraries for this project
-import json
-import pandas as pd
-import numpy as np
-from datetime import datetime
-from IPython.display import HTML
-import matplotlib.pyplot as plt
-import seaborn as sns
-import os.path
-from matplotlib.backends.backend_pdf import PdfPages
-import sys
-import gc
-import feather
-import toolkit as tool
-from icecream import ic
-from sys import getsizeof
+# =========================
+# Libraries
+# =========================
 import time
-import requests as re
-import re # for regex
-import nltk
-nltk.download('wordnet')
-nltk.download('stopwords')
-nltk.download('punkt')
-#nltk.download('all')
-from nltk.corpus import stopwords
-from nltk.stem import SnowballStemmer
-from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.model_selection import train_test_split
-from sklearn.naive_bayes import GaussianNB,MultinomialNB,BernoulliNB
-from sklearn.metrics import accuracy_score
-import pickle
-from transformers import BertTokenizer, BertForSequenceClassification
+import gc
 import string
+from datetime import datetime
 from collections import Counter
-from sklearn.feature_extraction.text import CountVectorizer
-from imblearn.over_sampling import SMOTE
 
-# Get start time 
-start_time = time.time()
-
-now = datetime.now()
- 
-print("date..............:", now)
-
-# Here we are going to implement some functions
-# redefine score
-def sentiment(label):
-    if label == 5.0 or label == 4.0:
-        return "0"
-    #elif label == 3.0:
-    #    return "Neutral"
-    elif label == 1.0 or label == 2.0:
-        return "1"
-
-print('*****************************************************')
-print('Starting the feature engineering of the dataset.')
-print('*****************************************************')
-
-# Loadind data
-print("Loading dataset - cleaned to feature engineering...")
-
-df_featuresel = pd.read_feather('data-feather/cleaned.ftr')
-
-# retirar os neutros.
-df_featuresel = df_featuresel[df_featuresel['Score'] != 3]
-    
-df_featuresel['negative'] = df_featuresel["Score"].apply(sentiment)
-
-# Counting reviews by stars
-ax = df_featuresel['Score'].value_counts().sort_index().plot(kind='bar',
-                                                  title='Contagem de Reviews por estrelas',
-                                                  figsize=(10, 5)
-                                                 )
-
-ax.set_xlabel('Review Stars')
-ax.set_ylabel('Contagem')
-plt.savefig('pngs/counting_reviews_stars.png')
-#plt.show()
-
-#Mude df5 para df3 para pegar toda base
-texts = df_featuresel['Text'].sum()
-texts[0:1000]
-
-stop_pt = nltk.corpus.stopwords.words('portuguese')
-stop_en = nltk.corpus.stopwords.words('english')
-stopwords_pa = stop_en + stop_pt
-stopwords_pa.extend(['-',''])
-
-list_words = texts.split()
-list_words = [l.strip().lower() for l in list_words]
-
-# lista de palavras do Text 'reviews'
-list_words = [l.strip(string.punctuation) for l in list_words]
-list_words = [l for l in list_words if l not in stopwords_pa]
-freqdist = Counter(list_words)
-#print(dict(freqdist.most_common(10)))
-
-print('Word clouds...Sentiment Analysis: Amazon ')
-
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from nltk.corpus import stopwords
 from wordcloud import WordCloud
-cleaned = ' '.join(list_words)
-wordcloud = WordCloud().generate(cleaned)
 
-fig, ax = plt.subplots(figsize=(10, 10))
-ax.imshow(wordcloud, interpolation='nearest')
-plt.grid(False)
+# =========================
+# Initial setup
+# =========================
+start_time = time.time()
+print("date..............:", datetime.now())
+
+# =========================
+# Load dataset
+# =========================
+print("Loading dataset...")
+df = pd.read_feather("../datasets/feather/cleaned.ftr")
+
+percentage = (
+    df["Score"]
+    .value_counts(normalize=True)
+    .mul(100)
+    .round(2)
+    .rename("percentage")
+)
+
+print(percentage.map(lambda x: f"{x:.2f}%"))
+
+
+# =========================
+# Exploratory analysis
+# =========================
+ax = df["Score"].value_counts().sort_index().plot(
+    kind="bar",
+    figsize=(10, 5),
+    title="Contagem de Reviews por Estrelas"
+)
+ax.set_xlabel("Review Stars")
+ax.set_ylabel("Contagem")
 plt.tight_layout()
-plt.savefig('pngs/word_clouds.png')
+plt.savefig("../pngs/counting_reviews_stars.png")
+plt.close()
 
-# converter string para inteiro
-df_featuresel['negative'] = pd.to_numeric(df_featuresel['negative'])
+# =========================
+# Text preprocessing (EDA only)
+# =========================
+print("Generating word cloud...")
 
-# >>> feature select
-df_featuresel = df_featuresel[['Text', 'negative']]
+stop_pt = stopwords.words("portuguese")
+stop_en = stopwords.words("english")
+stop_all = set(stop_pt + stop_en)
 
-# Define batch size
-batch_size = 100
+texts = " ".join(df["Text"].astype(str)).lower()
+tokens = texts.split()
+tokens = [t.strip(string.punctuation) for t in tokens]
+tokens = [t for t in tokens if t and t not in stop_all]
 
-# Split the DataFrame into batches
-batches = np.array_split(df_featuresel, len(df_featuresel) // batch_size)
+freqdist = Counter(tokens)
 
-i=0
-# Loop over the batches
-for batch in batches:
-    print(f'>>> #{i} Batching...')
-    
-    # feature and target
-    X = batch['Text']
-    y = batch['negative']
-    
-    # release memory RAM
-    tool.release_memory(batch)
-    
-    print('Transform X(text) to array, please...')
-    
-    cv = CountVectorizer()
-    X = cv.fit_transform(X).toarray()
-    #print(X)
-    print("Now X is one array, go ahead.")
-    
-    smote = SMOTE()
+cleaned_text = " ".join(tokens)
+wordcloud = WordCloud(width=800, height=800, background_color="white").generate(cleaned_text)
 
-    print('imbalance data to balance...')
-    
-    X, y = smote.fit_resample(X, y)
-    
-    print("X.shape = ",X.shape)
-    print("y.shape = ",y.shape)
-    
-    print('done, dataset balance. thanks!')
-    
-    # release memory - array
-    tool.release_array(X)
-    tool.release_array(y)
-    
-    #print(batch.head())
-    i+=1
+plt.figure(figsize=(10, 10))
+plt.imshow(wordcloud, interpolation="bilinear")
+plt.axis("off")
+plt.tight_layout()
+plt.savefig("../pngs/word_clouds.png")
+plt.close()
 
-print("saving the file format feather...")
+# =========================
+# Save outputs
+# =========================
+print("Saving feature-engineered datasets...")
 
-# this is important to do before save in feather format.
-df_featuresel = df_featuresel.reset_index(drop=True)
+df.reset_index(drop=True, inplace=True)
+df.to_feather("../datasets/feather/featured.ftr")
 
-# saving in the feather format
-df_featuresel.to_feather('data-feather/featureselected.ftr')
+# =========================
+# Final logs
+# =========================
+time_exec_min = round((time.time() - start_time) / 60, 4)
 
-# time of execution in minutes
-time_exec_min = round( (time.time() - start_time)/60, 4)
-
-print(f'time of execution (preprocessing): {time_exec_min} minutes')
-print("the feature engineering is done.")
-print("The next step is to do the modeling.")
-print("All Done.")
-
+print(f"Execution time: {time_exec_min} minutes")
+print("Feature engineering completed successfully.")
+print("Next step: modeling.")
