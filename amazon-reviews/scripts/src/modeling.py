@@ -5,17 +5,14 @@
 # ==============================
 # Imports
 # ==============================
-import json
 import time
 import pickle
 from datetime import datetime
-
 import pandas as pd
 import matplotlib.pyplot as plt
-import tensorflow as tf
+import seaborn as sns
 from tensorflow import keras
 from tensorflow.keras import layers
-
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import (
@@ -29,9 +26,7 @@ from sklearn.metrics import (
 )
 from sklearn.naive_bayes import GaussianNB
 from imblearn.over_sampling import SMOTE
-
 import toolkit as tool
-
 
 # ==============================
 # Helper functions
@@ -213,13 +208,41 @@ model_auc = roc_auc_score(y_validation, model_probs)
 fpr_gnb, tpr_gnb, _ = roc_curve(y_validation, y_gnb)
 fpr_dl, tpr_dl, _ = roc_curve(y_validation, model_probs)
 
+# Estilo seaborn
+sns.set_theme(style="whitegrid", context="talk")
+
 plt.figure(figsize=(16, 12))
-tool.plot_roc_curve(fpr_gnb, tpr_gnb, label=f'ML: GaussianNB (AUC={gnb_auc:.4f})')
-tool.plot_roc_curve(fpr_dl, tpr_dl, label=f'DL: Neural Network (AUC={model_auc:.4f})')
-plt.plot([0, 1], [0, 1], 'k--')
-plt.title('ROC Curve')
-plt.legend()
-plt.savefig('../pngs/model_ROC_curves.png')
+
+# GaussianNB ROC
+sns.lineplot(
+    x=fpr_gnb,
+    y=tpr_gnb,
+    label=f"ML: GaussianNB (AUC={gnb_auc:.4f})"
+)
+
+# Neural Network ROC
+sns.lineplot(
+    x=fpr_dl,
+    y=tpr_dl,
+    label=f"DL: Neural Network (AUC={model_auc:.4f})"
+)
+
+# Random classifier reference line
+plt.plot(
+    [0, 1],
+    [0, 1],
+    linestyle="--",
+    color="black",
+    label="Random"
+)
+
+plt.xlabel("False Positive Rate")
+plt.ylabel("True Positive Rate")
+plt.title("ROC Curve")
+plt.legend(loc="lower right")
+
+plt.savefig("../pngs/model_ROC_curves.png", dpi=300, bbox_inches="tight")
+#plt.show()
 
 
 # ==============================

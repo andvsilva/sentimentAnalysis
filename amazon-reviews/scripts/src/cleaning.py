@@ -67,7 +67,7 @@ def main():
     # -----------------------------------------------------
     # OPTIONAL: sample (REMOVE IN FINAL VERSION)
     # -----------------------------------------------------
-    df_reviews = df_reviews.sample(1_000, random_state=42)
+    df_reviews = df_reviews.sample(100_000, random_state=42)
 
     # -----------------------------------------------------
     # Drop unused columns

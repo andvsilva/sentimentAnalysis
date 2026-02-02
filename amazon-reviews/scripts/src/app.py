@@ -1,6 +1,5 @@
 import streamlit as st
 import tensorflow as tf
-import joblib
 import numpy as np
 from tensorflow import keras
 from sklearn.feature_extraction.text import CountVectorizer
@@ -16,8 +15,7 @@ from sklearn.naive_bayes import BernoulliNB
 from sklearn.metrics import confusion_matrix
 from nltk.tokenize import word_tokenize
 import numpy as np
-import itertools
-import matplotlib.pyplot as plt
+import nltk
 
 @st.cache_data
 def clean(text):
@@ -33,7 +31,7 @@ def is_special(text):
         return rem
 def to_lower(text):
     return text.lower()
-import nltk
+
 nltk.download('stopwords')
 nltk.download('punkt')
 def rem_stopwords(text):
