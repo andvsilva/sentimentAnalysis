@@ -31,6 +31,12 @@ nltk.download('stopwords')
 nltk.download('punkt')
 #nltk.download('all')
 
+from nltk.stem import SnowballStemmer
+
+STEMMER = SnowballStemmer("english")
+
+from tensorflow import keras
+from tensorflow.keras import layers
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
@@ -185,25 +191,49 @@ def rem_stopwords(text):
     words = word_tokenize(text)
     return [w for w in words if w not in stop_words]
 
-#No review tenha palavras de outro idioma
-def stem_txt(text):
-    ss = SnowballStemmer('english')
-    return " ".join([ss.stem(w) for w in text])
+def stem_txt(text: str) -> str:
+    if not text:
+        return ""
 
-#################################################
+    return " ".join(
+        STEMMER.stem(w)
+        for w in text.split()
+        if w.isalpha()
+    )
 
-# create preprocess_text function
-def preprocess_text(text):
-    # Tokenize the text
+
+# =====================================================
+# Global objects (IMPORTANT for performance)
+# =====================================================
+STOPWORDS = set(stopwords.words("english"))
+LEMMATIZER = WordNetLemmatizer()
+
+# =====================================================
+# Text preprocessing function
+# =====================================================
+def preprocess_text(text: str) -> str:
+    if not text:
+        return ""
+    
+    # sequential cleaning (your original applies)
+    text = clean(text)
+    text = is_special(text)
+    text = to_lower(text)
+    text = stem_txt(text)
+
+    # lowercase + tokenize
     tokens = word_tokenize(text.lower())
 
-    # Remove stop words
-    filtered_tokens = [token for token in tokens if token not in stopwords.words('english')]
+    # remove stopwords and non-alphabetic tokens
+    tokens = [
+        token for token in tokens
+        if token.isalpha() and token not in STOPWORDS
+    ]
 
-    # Lemmatize the tokens
-    lemmatizer = WordNetLemmatizer()
-    lemmatized_tokens = [lemmatizer.lemmatize(token) for token in filtered_tokens]
+    # lemmatization
+    tokens = [
+        LEMMATIZER.lemmatize(token)
+        for token in tokens
+    ]
 
-    # Join the tokens back into a string
-    processed_text = ' '.join(lemmatized_tokens)
-    return processed_text
+    return " ".join(tokens)

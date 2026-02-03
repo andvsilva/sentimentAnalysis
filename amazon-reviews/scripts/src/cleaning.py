@@ -63,15 +63,16 @@ def main():
     conn = sqlite3.connect(db_path)
 
     # number of rows from the database
-    n_rows = 500
+    n_rows = 50000
 
-    # lista as tabelas
+    # queries from database
     df_reviews = pd.read_sql(
         f"""
         SELECT Text, Score
         FROM Reviews
         WHERE Text IS NOT NULL
           AND Score IS NOT NULL
+          AND (Score <= 2 OR Score >= 5)
         LIMIT {n_rows}
         """,
         conn
@@ -86,7 +87,7 @@ def main():
     # -----------------------------------------------------
     # Text preprocessing (MULTICORE + PROGRESS BAR)
     # -----------------------------------------------------
-    log("Applying text preprocessing (joblib + tqdm)...")
+    log("Applying text preprocessing/cleaning (joblib + tqdm)...")
 
     texts = df_reviews["Text"].tolist()
     n_cores = max(cpu_count() - 1, 1)
