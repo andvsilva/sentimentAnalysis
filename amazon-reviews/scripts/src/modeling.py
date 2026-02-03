@@ -8,6 +8,7 @@
 import time
 import pickle
 from datetime import datetime
+from icecream import ic
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -32,12 +33,14 @@ import toolkit as tool
 # Helper functions
 # ==============================
 def sentiment(label: float) -> str:
+    feeling = ""
     """Map original score to binary sentiment."""
     if label in (4.0, 5.0):
-        return "0"   # Positive
+        feeling = "0" # positive
     elif label in (1.0, 2.0):
-        return "1"   # Negative
+        feeling = "1" # negative
 
+    return feeling
 
 # ==============================
 # Start execution
@@ -48,19 +51,14 @@ now = datetime.now()
 print("date..............:", now)
 print("Loading dataset - for modeling...")
 
-
-# ==============================
 # Load dataset
-# ==============================
 df_processed = pd.read_feather('../datasets/feather/featured.ftr')
-
 df_processed['Sentiment'] = df_processed['Score'].apply(sentiment)
 
 X_text = df_processed['Text']
 y = df_processed['Sentiment']
 
 tool.release_memory(df_processed)
-
 
 # ==============================
 # Class distribution (before SMOTE)
@@ -86,13 +84,13 @@ cv = CountVectorizer(
 
 X = cv.fit_transform(X_text)
 
-
 # ==============================
 # SMOTE balancing
 # ==============================
 print('Balancing dataset with SMOTE...')
 smote = SMOTE(random_state=42)
 X_res, y_res = smote.fit_resample(X, y)
+
 
 print("X.shape =", X_res.shape)
 print("y.shape =", y_res.shape)

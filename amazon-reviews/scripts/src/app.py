@@ -1,20 +1,11 @@
 import streamlit as st
-import tensorflow as tf
 import numpy as np
-from tensorflow import keras
-from sklearn.feature_extraction.text import CountVectorizer
 import pickle
 from keras.models import model_from_json
-import pandas as pd
 from nltk.corpus import stopwords
 from nltk.stem import SnowballStemmer
 import re
-import streamlit as st
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import BernoulliNB
-from sklearn.metrics import confusion_matrix
 from nltk.tokenize import word_tokenize
-import numpy as np
 import nltk
 
 @st.cache_data
@@ -51,7 +42,7 @@ loaded_model_json = json_file.read()
 json_file.close()
 
 model = model_from_json(loaded_model_json)
-model.load_weights("modelkeras.h5")
+model.load_weights("modelkeras.weights.h5")
 
 def main():
     st.title('Deep Learning Model Deployment')

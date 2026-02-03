@@ -11,12 +11,14 @@ import time
 from datetime import datetime
 from multiprocessing import cpu_count
 from contextlib import contextmanager
-
 import pandas as pd
+import sqlite3
 from joblib import Parallel, delayed
 from tqdm import tqdm
-
 import toolkit as tool
+
+# path ti the file sqlite
+db_path = "../datasets/database.sqlite"
 
 # ---------------------------------------------------------
 # Utils
@@ -56,42 +58,30 @@ def main():
     log(f"Date: {datetime.now()}")
 
     # -----------------------------------------------------
-    # Load dataset
+    # Load dataset - connect to the database
     # -----------------------------------------------------
-    df_reviews = pd.read_feather("../datasets/feather/Reviews.ftr")
-    log(f"Dataset loaded | shape: {df_reviews.shape}")
+    conn = sqlite3.connect(db_path)
 
-    # Reduce memory usage
-    df_reviews = tool.reduce_mem_usage(df_reviews)
+    # number of rows from the database
+    n_rows = 500
 
-    # -----------------------------------------------------
-    # OPTIONAL: sample (REMOVE IN FINAL VERSION)
-    # -----------------------------------------------------
-    df_reviews = df_reviews.sample(100_000, random_state=42)
+    # lista as tabelas
+    df_reviews = pd.read_sql(
+        f"""
+        SELECT Text, Score
+        FROM Reviews
+        WHERE Text IS NOT NULL
+          AND Score IS NOT NULL
+        LIMIT {n_rows}
+        """,
+        conn
+    )
 
-    # -----------------------------------------------------
-    # Drop unused columns
-    # -----------------------------------------------------
-    rm_cols = [
-        "Id",
-        "ProductId",
-        "UserId",
-        "ProfileName",
-        "HelpfulnessNumerator",
-        "HelpfulnessDenominator",
-        "Time",
-        "Summary",
-    ]
+    total_rows = df_reviews.shape
+    print(total_rows)
+    print(df_reviews.head())
 
-    df_reviews.drop(columns=rm_cols, inplace=True)
-
-    # -----------------------------------------------------
-    # Basic filtering
-    # -----------------------------------------------------
-    df_reviews.dropna(inplace=True)
-    df_reviews = df_reviews[df_reviews["Score"] != 3]
-
-    log(f"After filtering | shape: {df_reviews.shape}")
+    conn.close()
 
     # -----------------------------------------------------
     # Text preprocessing (MULTICORE + PROGRESS BAR)
