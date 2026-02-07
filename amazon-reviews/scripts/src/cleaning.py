@@ -63,7 +63,7 @@ def main():
     conn = sqlite3.connect(db_path)
 
     # number of rows from the database
-    n_rows = 50000
+    n_rows = 100000
 
     # queries from database
     df_reviews = pd.read_sql(

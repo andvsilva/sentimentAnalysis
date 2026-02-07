@@ -47,8 +47,8 @@ def main():
     os.system('python3 featureeng.py') # > logs/feature-eng.dat
     
     # step 3
-    os.system('python3 modelingnn.py') # > logs/training.dat
-    #os.system('python3 modelingtorch.py') # > logs/training.dat
+    #os.system('python3 modelingnn.py') # > logs/training.dat
+    os.system('python3 modelingtorch.py') # > logs/training.dat
 
     time_exec_min = round( (time.time() - start_time)/60, 4)
     

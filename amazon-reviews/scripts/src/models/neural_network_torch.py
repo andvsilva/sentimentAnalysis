@@ -1,4 +1,5 @@
-# models/neural_network_torch.py
+# models/neural_network_torch.py  (or inline in app.py)
+
 import torch
 import torch.nn as nn
 import numpy as np

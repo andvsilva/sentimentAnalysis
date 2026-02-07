@@ -216,7 +216,7 @@ sns.lineplot(
 sns.lineplot(
     x=fpr_dl,
     y=tpr_dl,
-    label=f"DL: Neural Network (AUC={model_auc:.4f})"
+    label=f"DL: PyTorch (AUC={model_auc:.4f})"
 )
 
 # Random classifier reference line
@@ -235,7 +235,6 @@ plt.legend(loc="lower right")
 
 plt.savefig("../pngs/model_ROC_curves_torch.png", dpi=300, bbox_inches="tight")
 #plt.show()
-
 
 # ==============================
 # Save models

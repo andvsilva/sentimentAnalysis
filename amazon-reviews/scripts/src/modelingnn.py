@@ -153,7 +153,7 @@ plt.xlabel('Epoch')
 plt.ylabel('Loss')
 plt.title('Learning Curves')
 os.chdir('../')
-plt.savefig('../pngs/learningcurves.png')
+plt.savefig('../pngs/learningcurvesnn.png')
 
 
 # ==============================
@@ -224,7 +224,7 @@ plt.ylabel("True Positive Rate")
 plt.title("ROC Curve")
 plt.legend(loc="lower right")
 
-plt.savefig("../pngs/model_ROC_curves.png", dpi=300, bbox_inches="tight")
+plt.savefig("../pngs/model_ROC_curvesnn.png", dpi=300, bbox_inches="tight")
 #plt.show()
 
 

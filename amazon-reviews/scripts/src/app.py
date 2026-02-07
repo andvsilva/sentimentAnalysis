@@ -7,6 +7,9 @@ from nltk.stem import SnowballStemmer
 import re
 from nltk.tokenize import word_tokenize
 import nltk
+import os
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
 @st.cache_data
 def clean(text):
